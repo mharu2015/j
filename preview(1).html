@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ひらがな練習（完全フィット）</title>
+
+<style>
+body{
+  font-family:sans-serif;
+  text-align:center;
+  background:#f5f5ff;
+}
+
+input{
+  font-size:24px;
+  padding:6px;
+  width:220px;
+  text-align:center;
+}
+
+#wrap{
+  position:relative;
+  width:320px;
+  height:320px;
+  margin:20px auto;
+  border:2px solid #ccc;
+  overflow:hidden;
+}
+
+#char{
+  position:absolute;
+  width:100%;
+  height:100%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  color:rgba(0,0,0,0.15);
+  font-weight:bold;
+  pointer-events:none;
+
+  white-space:nowrap;
+}
+
+canvas{
+  position:absolute;
+  left:0;
+  top:0;
+  width:320px;
+  height:320px;
+  touch-action:none;
+}
+
+button{
+  margin:5px;
+  padding:10px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>ひらがな練習</h1>
+
+<input id="input" placeholder="文字入力">
+
+<div id="wrap">
+  <div id="char">あ</div>
+  <canvas id="cv" width="320" height="320"></canvas>
+</div>
+
+<button onclick="clearCanvas()">🧽クリア</button>
+<button onclick="speak()">🔊読み上げ</button>
+
+<script>
+const input = document.getElementById("input");
+const char = document.getElementById("char");
+
+const canvas = document.getElementById("cv");
+const ctx = canvas.getContext("2d");
+
+const MAX_SIZE = 260;
+
+// ✨ 完全フィット関数
+function fitText(text){
+  char.textContent = text || "あ";
+
+  let size = MAX_SIZE;
+  char.style.fontSize = size + "px";
+
+  // 仮計測用canvas
+  const measure = document.createElement("canvas");
+  const mctx = measure.getContext("2d");
+
+  while(size > 20){
+    mctx.font = `bold ${size}px sans-serif`;
+    const w = mctx.measureText(char.textContent).width;
+
+    if(w <= 300) break; // 枠内に収まる
+    size -= 2;
+  }
+
+  char.style.fontSize = size + "px";
+}
+
+// 入力
+input.addEventListener("input", ()=>{
+  fitText(input.value);
+});
+
+fitText("あ");
+
+// 描画
+let drawing=false;
+
+canvas.addEventListener("pointerdown",(e)=>{
+  drawing=true;
+  ctx.beginPath();
+  ctx.moveTo(e.offsetX,e.offsetY);
+});
+
+canvas.addEventListener("pointermove",(e)=>{
+  if(!drawing) return;
+  ctx.lineWidth=8;
+  ctx.lineCap="round";
+  ctx.strokeStyle="#000";
+  ctx.lineTo(e.offsetX,e.offsetY);
+  ctx.stroke();
+});
+
+canvas.addEventListener("pointerup",()=>drawing=false);
+canvas.addEventListener("mouseleave",()=>drawing=false);
+
+function clearCanvas(){
+  ctx.clearRect(0,0,320,320);
+}
+
+function speak(){
+  const u=new SpeechSynthesisUtterance(char.textContent);
+  u.lang="ja-JP";
+  speechSynthesis.speak(u);
+}
+</script>
+
+</body>
+</html>
